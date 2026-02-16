@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Detalle Ejecutivo</title>
+<style>
+body{
+  font-family: 'Segoe UI';
+  background:#f4f6f9;
+  padding:20px;
+}
+.card{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom:20px;
+}
+.kpi{
+  font-size:18px;
+  margin:10px 0;
+}
+.verde{color:#28a745;font-weight:bold;}
+.rojo{color:#dc3545;font-weight:bold;}
+.amarillo{color:#ffc107;font-weight:bold;}
+button{
+  padding:8px 12px;
+  margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<h2>📊 Feedback Ejecutivo</h2>
+<div id="contenido"></div>
+
+<script>
+const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTv__z4dmUZOol3wAk_xfvxVHrJHFuaP3dKX8M9S-j6dd3WjUz0iCpxGnIOzpq2s1oOKPWGf5q45Yox/pub?output=csv";
+
+const params = new URLSearchParams(window.location.search);
+const racBuscado = params.get("rac");
+
+fetch(url)
+.then(r=>r.text())
+.then(csv=>{
+  const filas = csv.split("\n").map(r=>r.split(","));
+  const headers = filas[0];
+  const datos = filas.slice(1);
+
+  const indiceRAC = headers.indexOf("RAC");
+
+  const registros = datos.filter(f=>f[indiceRAC] === racBuscado);
+
+  if(!registros.length){
+    document.getElementById("contenido").innerHTML = "No se encontró información.";
+    return;
+  }
+
+  // Tomamos último registro (más reciente)
+  const ultimo = registros[registros.length - 1];
+
+  let html = `<div class="card">`;
+  html += `<h3>Ejecutivo: ${racBuscado}</h3>`;
+
+  headers.forEach((h,i)=>{
+    if(ultimo[i].includes("%")){
+      const valor = parseFloat(ultimo[i].replace("%",""));
+      let clase = valor >= 90 ? "verde" : valor >= 80 ? "amarillo" : "rojo";
+      html += `<div class="kpi">${h}: <span class="${clase}">${ultimo[i]}</span></div>`;
+    }
+  });
+
+  html += `<button onclick="history.back()">⬅ Volver</button>`;
+  html += `</div>`;
+
+  document.getElementById("contenido").innerHTML = html;
+});
+</script>
+
+</body>
+</html>
